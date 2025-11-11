@@ -76,27 +76,30 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sim.now]);
 
-function applyUntil(now) {
-  const { L } = mapApiRef.current;
-  tripsRef.current.forEach(trip => {
-    while (trip.ptr < trip.events.length && trip.events[trip.ptr].t <= now) {
-      const e = trip.events[trip.ptr];
+  function applyUntil(now) {
+    const { L } = mapApiRef.current;
+    console.log({ L });
 
-      // ...marker move / polyline extend...
+    tripsRef.current.forEach((trip) => {
+      while (trip.ptr < trip.events.length && trip.events[trip.ptr].t <= now) {
+        const e = trip.events[trip.ptr];
 
-      // 🔔 ALERT collect
-      const a = pickAlert(e);
-      if (a) {
-        setAlerts(prev => [{ ...a, tripId: trip.id }, ...prev].slice(0, 50)); // latest 50 only
+        // ...marker move / polyline extend...
+
+        // 🔔 ALERT collect
+        const a = pickAlert(e);
+        if (a) {
+          setAlerts((prev) =>
+            [{ ...a, tripId: trip.id }, ...prev].slice(0, 50)
+          ); // latest 50 only
+        }
+
+        trip.ptr++;
+        trip.progress = Math.round((trip.ptr / trip.events.length) * 100);
+        trip.completed = trip.ptr >= trip.events.length;
       }
-
-      trip.ptr++;
-      trip.progress = Math.round((trip.ptr / trip.events.length) * 100);
-      trip.completed = trip.ptr >= trip.events.length;
-    }
-  });
-}
-
+    });
+  }
 
   function resetPointers(clearLines = true) {
     const { L } = mapApiRef.current;
@@ -114,8 +117,8 @@ function applyUntil(now) {
   const fleet = useMemo(() => {
     const arr = Array.from(tripsRef.current.values());
     const any = tripsRef.current.values().next().value;
-   console.log("sample ptr/progress:", any?.ptr, any?.progress);
-    
+    console.log("sample ptr/progress:", any?.ptr, any?.progress);
+
     const pct = (n) => arr.filter((t) => t.progress >= n).length;
     return {
       total: arr.length,
